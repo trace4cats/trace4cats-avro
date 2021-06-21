@@ -11,6 +11,9 @@ object Dependencies {
     val log4cats = "2.1.1"
     val logback = "1.2.3"
     val vulcan = "1.7.1"
+
+    val kindProjector = "0.13.0"
+    val betterMonadicFor = "0.3.1"
   }
 
   lazy val trace4catsExporterCommon = "io.janstenpickle" %% "trace4cats-exporter-common" % Versions.trace4cats
@@ -23,4 +26,6 @@ object Dependencies {
   lazy val vulcan = "com.github.fd4s"        %% "vulcan"          % Versions.vulcan
   lazy val vulcanGeneric = "com.github.fd4s" %% "vulcan-generic"  % Versions.vulcan
 
+  lazy val kindProjector = ("org.typelevel" % "kind-projector"     % Versions.kindProjector).cross(CrossVersion.full)
+  lazy val betterMonadicFor = "com.olegpy" %% "better-monadic-for" % Versions.betterMonadicFor
 }
