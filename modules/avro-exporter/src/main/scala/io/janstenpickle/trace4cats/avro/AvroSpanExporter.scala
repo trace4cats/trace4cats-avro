@@ -3,14 +3,13 @@ package io.janstenpickle.trace4cats.avro
 import java.io.ByteArrayOutputStream
 import java.net.ConnectException
 import cats.effect.kernel.syntax.spawn._
-import cats.effect.kernel.{Async, Clock, Resource, Sync}
+import cats.effect.kernel.{Async, Resource, Sync}
 import cats.effect.std.{Queue, Semaphore}
 import cats.syntax.applicativeError._
 import cats.syntax.apply._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import cats.syntax.monad._
 import cats.syntax.option._
 import cats.syntax.traverse._
 import cats.{Applicative, Traverse}
@@ -83,7 +82,7 @@ object AvroSpanExporter {
         .repeatEval {
           for {
             batch <- queue.take
-            _ <- semaphore.permit.use { _ =>
+            _ <- semaphore.permit.surround {
               batch.spans.traverse { span =>
                 for {
                   ba <- encode[F](schema)(span)
@@ -105,18 +104,14 @@ object AvroSpanExporter {
       semaphore <- Resource.eval(Semaphore[F](maxPermits))
       socketGroup <- Network[F].datagramSocketGroup()
       socket <- socketGroup.openDatagramSocket()
-      writer = Resource
-        .make(
-          Stream
-            .retry(write(avroSchema, address, semaphore, queue, socket), 5.seconds, _ + 1.second, Int.MaxValue)
-            .compile
-            .drain
-            .start
-        )(fiber =>
-          Clock[F].sleep(50.millis).whileM_(semaphore.available.map(_ < maxPermits)) >>
-            fiber.cancel
-        )
-      _ <- replicateA_(writer)(numFibers)
+      writer = Stream
+        .retry(write(avroSchema, address, semaphore, queue, socket), 5.seconds, _ + 1.second, Int.MaxValue)
+        .compile
+        .drain
+        .background
+      writers = replicateA_(writer)(numFibers)
+      preFinalizer = Resource.unit[F].onFinalize(semaphore.acquireN(maxPermits))
+      _ <- writers >> preFinalizer
     } yield new SpanExporter[F, G] {
       override def exportBatch(batch: Batch[G]): F[Unit] = queue.offer(batch)
     }
@@ -159,7 +154,7 @@ object AvroSpanExporter {
             .repeatEval {
               for {
                 batch <- queue.take
-                _ <- semaphore.permit.use { _ =>
+                _ <- semaphore.permit.surround {
                   batch.spans.traverse { span =>
                     for {
                       ba <- encode[F](schema)(span)
@@ -182,17 +177,15 @@ object AvroSpanExporter {
       queue <- Resource.eval(Queue.bounded[F, Batch[G]](queueCapacity))
       semaphore <- Resource.eval(Semaphore[F](maxPermits))
       socketGroup <- Network[F].socketGroup()
-      writer = Resource.make(
+      writer =
         Stream
           .retry(write(avroSchema, address, semaphore, queue, socketGroup), 5.seconds, _ + 1.second, Int.MaxValue)
           .compile
           .drain
-          .start
-      )(fiber =>
-        Clock[F].sleep(50.millis).whileM_(semaphore.available.map(_ < maxPermits)) >>
-          fiber.cancel
-      )
-      _ <- replicateA_(writer)(numFibers)
+          .background
+      writers = replicateA_(writer)(numFibers)
+      preFinalizer = Resource.unit[F].onFinalize(semaphore.acquireN(maxPermits))
+      _ <- writers >> preFinalizer
     } yield new SpanExporter[F, G] {
       override def exportBatch(batch: Batch[G]): F[Unit] = queue.offer(batch)
     }
