@@ -11,9 +11,9 @@
 Add it to your `build.sbt`:
 
 ```scala
-"io.janstenpickle" %% "trace4cats-avro" % "<version>"
-"io.janstenpickle" %% "trace4cats-avro-exporter" % "<version>"
-"io.janstenpickle" %% "trace4cats-avro-server" % "<version>"
+"io.janstenpickle" %% "trace4cats-avro" % "0.12.0-RC2"
+"io.janstenpickle" %% "trace4cats-avro-exporter" % "0.12.0-RC2"
+"io.janstenpickle" %% "trace4cats-avro-server" % "0.12.0-RC2"
 ```
 
 ## Contributing
