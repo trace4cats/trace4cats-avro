@@ -38,10 +38,7 @@ lazy val root = (project in file("."))
 lazy val avro =
   (project in file("modules/avro"))
     .settings(publishSettings)
-    .settings(
-      name := "trace4cats-avro",
-      libraryDependencies ++= Seq(Dependencies.trace4catsModel, Dependencies.vulcan, Dependencies.vulcanGeneric)
-    )
+    .settings(name := "trace4cats-avro", libraryDependencies ++= Seq(Dependencies.trace4catsModel, Dependencies.vulcan))
 
 lazy val `avro-exporter` =
   (project in file("modules/avro-exporter"))

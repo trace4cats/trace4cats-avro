@@ -31,12 +31,15 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
     list <- Gen.listOfN(n, batchArb.arbitrary)
   } yield (n, list))
 
+  implicit val completedSpanBuilderNel: Arbitrary[NonEmptyList[CompletedSpan.Builder]] =
+    Arbitrary(Gen.nonEmptyListOf(completedSpanBuilderArb.arbitrary).map(NonEmptyList.fromListUnsafe))
+
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
 
   behavior.of("Avro TCP")
 
   it should "send batches" in {
-    forAll { batch: Batch[Chunk] =>
+    forAll { (batch: Batch[Chunk]) =>
       Queue
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
@@ -59,7 +62,7 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
   }
 
   it should "send batches via multiple fibers" in {
-    forAll { nBatches: (Int, List[Batch[Chunk]]) =>
+    forAll { (nBatches: (Int, List[Batch[Chunk]])) =>
       val (n, batches) = nBatches
       Queue
         .unbounded[IO, CompletedSpan]
@@ -113,7 +116,7 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
   behavior.of("Avro UDP")
 
   it should "send batches" in {
-    forAll { batch: Batch[Chunk] =>
+    forAll { (batch: Batch[Chunk]) =>
       Queue
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
@@ -136,7 +139,7 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
   }
 
   it should "send batches via multiple fibers" in {
-    forAll { nBatches: (Int, List[Batch[Chunk]]) =>
+    forAll { (nBatches: (Int, List[Batch[Chunk]])) =>
       val (n, batches) = nBatches
       Queue
         .unbounded[IO, CompletedSpan]
