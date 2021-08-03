@@ -38,7 +38,15 @@ lazy val root = (project in file("."))
 lazy val avro =
   (project in file("modules/avro"))
     .settings(publishSettings)
-    .settings(name := "trace4cats-avro", libraryDependencies ++= Seq(Dependencies.trace4catsModel, Dependencies.vulcan))
+    .settings(
+      name := "trace4cats-avro",
+      libraryDependencies ++= Seq(Dependencies.trace4catsModel, Dependencies.vulcan),
+      libraryDependencies ++=
+        (CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, 13)) => Seq(Dependencies.trace4catsTestkit, Dependencies.vulcanGeneric, Dependencies.slf4jNop)
+          case _ => Seq.empty
+        }).map(_ % Test)
+    )
 
 lazy val `avro-exporter` =
   (project in file("modules/avro-exporter"))
