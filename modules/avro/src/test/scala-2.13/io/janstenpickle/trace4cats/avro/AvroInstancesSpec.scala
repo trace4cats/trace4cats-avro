@@ -1,7 +1,7 @@
 package io.janstenpickle.trace4cats.avro
 
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers._
 
 class AvroInstancesSpec extends AnyFlatSpec {
 
