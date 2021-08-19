@@ -59,9 +59,9 @@ object AvroSpanExporter {
 
   /** Creates a UDP exporter with an internal queue that accepts batches from the traced app.
     *
-    * @param numFibers the capacity of the internal queue and the number of concurrent
-    *                  workers that consume the queue and send batches via UDP; use numbers
-    *                  greater than 1 at your own risk
+    * @param numFibers
+    *   the capacity of the internal queue and the number of concurrent workers that consume the queue and send batches
+    *   via UDP; use numbers greater than 1 at your own risk
     */
   def udp[F[_]: Async, G[_]: Traverse](
     host: String = agentHostname,
@@ -119,9 +119,9 @@ object AvroSpanExporter {
 
   /** Creates a TCP exporter with an internal queue that accepts batches from the traced app.
     *
-    * @param numFibers the capacity of the internal queue and the number of concurrent
-    *                  workers that consume the queue and send batches via TCP; use numbers
-    *                  greater than 1 at your own risk
+    * @param numFibers
+    *   the capacity of the internal queue and the number of concurrent workers that consume the queue and send batches
+    *   via TCP; use numbers greater than 1 at your own risk
     */
   def tcp[F[_]: Async: Logger, G[_]: Traverse](
     host: String = agentHostname,
