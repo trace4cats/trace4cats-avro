@@ -14,7 +14,7 @@ object Dependencies {
     val vulcan = "1.7.1"
     val slf4j = "1.7.32"
 
-    val kindProjector = "0.13.1"
+    val kindProjector = "0.13.2"
     val betterMonadicFor = "0.3.1"
   }
 
