@@ -26,7 +26,7 @@ import org.apache.avro.io.EncoderFactory
 import scala.concurrent.duration._
 
 object AvroSpanExporter {
-  //TODO: use one from cats-core when it's merged https://github.com/typelevel/cats/pull/3705
+  // TODO: use one from cats-core when it's merged https://github.com/typelevel/cats/pull/3705
   private def replicateA_[F[_]: Applicative, A](fa: F[A])(n: Int): F[Unit] =
     (1 to n).map(_ => fa).foldLeft(Applicative[F].unit)(_ <* _)
 
