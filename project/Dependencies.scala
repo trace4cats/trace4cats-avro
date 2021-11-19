@@ -3,14 +3,14 @@ import sbt._
 object Dependencies {
   object Versions {
     val scala212 = "2.12.15"
-    val scala213 = "2.13.6"
-    val scala3 = "3.1.0"
+    val scala213 = "2.13.7"
+    val scala3 = "3.0.2"
 
     val trace4cats = "0.12.0"
 
     val fs2 = "3.1.6"
     val log4cats = "2.1.1"
-    val logback = "1.2.6"
+    val logback = "1.2.7"
     val vulcan = "1.7.1"
     val slf4j = "1.7.32"
 
