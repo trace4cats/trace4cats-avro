@@ -12,7 +12,7 @@ object Dependencies {
     val log4cats = "2.1.1"
     val logback = "1.2.10"
     val vulcan = "1.7.1"
-    val slf4j = "1.7.32"
+    val slf4j = "1.7.33"
 
     val kindProjector = "0.13.2"
     val betterMonadicFor = "0.3.1"
