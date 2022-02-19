@@ -8,7 +8,7 @@ object Dependencies {
 
     val trace4cats = "0.12.0"
 
-    val fs2 = "3.2.4"
+    val fs2 = "3.2.5"
     val log4cats = "2.2.0"
     val logback = "1.2.10"
     val vulcan = "1.7.1"
