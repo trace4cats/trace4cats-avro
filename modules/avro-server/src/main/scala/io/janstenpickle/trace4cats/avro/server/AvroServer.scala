@@ -22,10 +22,10 @@ object AvroServer {
     bytes => {
       def go(lastBytes: (Byte, Byte), state: List[Byte], stream: Stream[F, Byte]): Pull[F, Chunk[Byte], Unit] =
         stream.pull.uncons1.flatMap {
-          case Some((hd, tl)) =>
+          case Some(hd, tl) =>
             val newLastBytes = (lastBytes._2, hd)
             val newState = hd :: state
-            if (newLastBytes == (0xc4.byteValue -> 0x02.byteValue))
+            if (newLastBytes == 0xc4.byteValue -> 0x02.byteValue)
               Pull.output1(Chunk(newState.drop(2).reverse: _*)) >> go((0, 0), List.empty, tl)
             else
               go(newLastBytes, newState, tl)

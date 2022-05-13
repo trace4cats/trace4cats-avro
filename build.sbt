@@ -2,14 +2,14 @@ lazy val commonSettings = Seq(
   Compile / compile / javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, _)) =>
+      case Some(2, _) =>
         Seq(compilerPlugin(Dependencies.kindProjector), compilerPlugin(Dependencies.betterMonadicFor))
       case _ => Seq.empty
     }
   },
   scalacOptions += {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, _)) => "-Wconf:any:wv"
+      case Some(2, _) => "-Wconf:any:wv"
       case _ => "-Wconf:any:v"
     }
   },
@@ -41,7 +41,7 @@ lazy val avro =
       libraryDependencies ++= Seq(Dependencies.trace4catsModel, Dependencies.vulcan),
       libraryDependencies ++=
         (CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, 13)) => Seq(Dependencies.trace4catsTestkit, Dependencies.vulcanGeneric, Dependencies.slf4jNop)
+          case Some(2, 13) => Seq(Dependencies.trace4catsTestkit, Dependencies.vulcanGeneric, Dependencies.slf4jNop)
           case _ => Seq.empty
         }).map(_ % Test)
     )
