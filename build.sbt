@@ -38,7 +38,7 @@ lazy val avro =
     .settings(publishSettings)
     .settings(
       name := "trace4cats-avro",
-      libraryDependencies ++= Seq(Dependencies.trace4catsModel, Dependencies.vulcan),
+      libraryDependencies ++= Seq(Dependencies.trace4catsKernel, Dependencies.vulcan),
       libraryDependencies ++=
         (CrossVersion.partialVersion(scalaVersion.value) match {
           case Some((2, 13)) => Seq(Dependencies.trace4catsTestkit, Dependencies.vulcanGeneric, Dependencies.slf4jNop)
@@ -51,7 +51,7 @@ lazy val `avro-exporter` =
     .settings(publishSettings)
     .settings(
       name := "trace4cats-avro-exporter",
-      libraryDependencies ++= Seq(Dependencies.trace4catsExporterCommon, Dependencies.fs2Io)
+      libraryDependencies ++= Seq(Dependencies.trace4catsCore, Dependencies.fs2Io)
     )
     .dependsOn(avro)
 

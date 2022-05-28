@@ -1,12 +1,12 @@
-package io.janstenpickle.trace4cats.avro
+package trace4cats.avro
 
 import cats.effect.kernel.{Async, Resource}
 import fs2.Chunk
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import io.janstenpickle.trace4cats.`export`.{CompleterConfig, QueuedSpanCompleter}
-import io.janstenpickle.trace4cats.kernel.SpanCompleter
-import io.janstenpickle.trace4cats.model.TraceProcess
+import trace4cats.kernel.SpanCompleter
+import trace4cats.model.TraceProcess
+import trace4cats.{CompleterConfig, QueuedSpanCompleter}
 
 object AvroSpanCompleter {
   def udp[F[_]: Async](

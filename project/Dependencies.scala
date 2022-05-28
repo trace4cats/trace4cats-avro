@@ -6,7 +6,7 @@ object Dependencies {
     val scala213 = "2.13.8"
     val scala3 = "3.1.2"
 
-    val trace4cats = "0.13.1"
+    val trace4cats = "0.13.1+67-a7d9b849"
 
     val fs2 = "3.2.7"
     val log4cats = "2.3.1"
@@ -18,9 +18,9 @@ object Dependencies {
     val betterMonadicFor = "0.3.1"
   }
 
-  lazy val trace4catsExporterCommon = "io.janstenpickle" %% "trace4cats-exporter-common" % Versions.trace4cats
-  lazy val trace4catsModel = "io.janstenpickle"          %% "trace4cats-model"           % Versions.trace4cats
-  lazy val trace4catsTestkit = "io.janstenpickle"        %% "trace4cats-testkit"         % Versions.trace4cats
+  lazy val trace4catsKernel = "io.janstenpickle"  %% "trace4cats-kernel"  % Versions.trace4cats
+  lazy val trace4catsCore = "io.janstenpickle"    %% "trace4cats-core"    % Versions.trace4cats
+  lazy val trace4catsTestkit = "io.janstenpickle" %% "trace4cats-testkit" % Versions.trace4cats
 
   lazy val fs2Io = "co.fs2"                  %% "fs2-io"          % Versions.fs2
   lazy val log4cats = "org.typelevel"        %% "log4cats-slf4j"  % Versions.log4cats

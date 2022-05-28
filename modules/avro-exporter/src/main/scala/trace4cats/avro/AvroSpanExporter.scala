@@ -1,7 +1,8 @@
-package io.janstenpickle.trace4cats.avro
+package trace4cats.avro
 
 import java.io.ByteArrayOutputStream
 import java.net.ConnectException
+
 import cats.effect.kernel.syntax.spawn._
 import cats.effect.kernel.{Async, Resource, Sync}
 import cats.effect.std.{Queue, Semaphore}
@@ -14,14 +15,14 @@ import cats.syntax.option._
 import cats.syntax.traverse._
 import cats.{Applicative, Traverse}
 import com.comcast.ip4s.{Host, IpAddress, Port, SocketAddress}
-import fs2.io.net.{Datagram, DatagramSocket, Network, Socket, SocketGroup}
+import fs2.io.net._
 import fs2.{Chunk, Stream}
-import org.typelevel.log4cats.Logger
-import io.janstenpickle.trace4cats.kernel.SpanExporter
-import io.janstenpickle.trace4cats.model.{Batch, CompletedSpan}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.io.EncoderFactory
+import org.typelevel.log4cats.Logger
+import trace4cats.kernel.SpanExporter
+import trace4cats.model.{Batch, CompletedSpan}
 
 import scala.concurrent.duration._
 

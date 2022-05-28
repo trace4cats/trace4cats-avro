@@ -1,4 +1,4 @@
-package io.janstenpickle.trace4cats.avro.server
+package trace4cats.avro.server
 
 import cats.effect.kernel.{Async, Resource, Sync}
 import cats.syntax.applicativeError._
@@ -9,12 +9,12 @@ import cats.syntax.option._
 import com.comcast.ip4s.Port
 import fs2.io.net.Network
 import fs2.{Chunk, Pipe, Pull, Stream}
-import org.typelevel.log4cats.Logger
-import io.janstenpickle.trace4cats.avro.{agentPort, AvroInstances}
-import io.janstenpickle.trace4cats.model.CompletedSpan
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.DecoderFactory
+import org.typelevel.log4cats.Logger
+import trace4cats.avro.{agentPort, AvroInstances}
+import trace4cats.model.CompletedSpan
 
 object AvroServer {
 

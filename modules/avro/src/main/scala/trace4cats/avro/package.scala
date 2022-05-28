@@ -1,4 +1,4 @@
-package io.janstenpickle.trace4cats
+package trace4cats
 
 import scala.util.Try
 

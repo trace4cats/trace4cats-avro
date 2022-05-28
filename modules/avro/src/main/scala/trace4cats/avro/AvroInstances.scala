@@ -1,16 +1,16 @@
-package io.janstenpickle.trace4cats.avro
+package trace4cats.avro
 
 import cats.data.NonEmptyList
 import cats.free.FreeApplicative
 import cats.syntax.apply._
 import cats.syntax.either._
 import cats.{ApplicativeThrow, Eval}
-import io.janstenpickle.trace4cats.model._
 import org.apache.avro.Schema
+import trace4cats.model._
 import vulcan.{AvroError, Codec}
 
 object AvroInstances {
-  private val modelNs = "io.janstenpickle.trace4cats.model"
+  private val modelNs = "trace4cats.model"
 
   implicit val spanIdCodec: Codec[SpanId] =
     Codec.bytes.imapError(SpanId(_).toRight(AvroError("Invalid Span ID")))(_.value)
