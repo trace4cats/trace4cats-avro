@@ -1,4 +1,4 @@
-package io.janstenpickle.trace4cats.avro
+package trace4cats.avro
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._

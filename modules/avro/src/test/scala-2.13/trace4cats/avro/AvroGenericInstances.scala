@@ -1,8 +1,8 @@
-package io.janstenpickle.trace4cats.avro
+package trace4cats.avro
 
 import cats.Eval
 import cats.data.NonEmptyList
-import io.janstenpickle.trace4cats.model._
+import trace4cats.model._
 import vulcan.generic._
 import vulcan.{AvroError, Codec}
 

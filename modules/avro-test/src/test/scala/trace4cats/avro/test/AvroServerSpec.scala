@@ -1,22 +1,22 @@
-package io.janstenpickle.trace4cats.avro.test
+package trace4cats.avro.test
 
 import cats.data.NonEmptyList
-import cats.effect.{IO, Resource}
 import cats.effect.std.Queue
 import cats.effect.unsafe.implicits.global
+import cats.effect.{IO, Resource}
 import cats.kernel.Eq
 import cats.syntax.all._
 import fs2.{Chunk, Stream}
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
-import io.janstenpickle.trace4cats.`export`.CompleterConfig
-import io.janstenpickle.trace4cats.avro.{AvroSpanCompleter, AvroSpanExporter}
-import io.janstenpickle.trace4cats.avro.server.AvroServer
-import io.janstenpickle.trace4cats.model.{Batch, CompletedSpan, TraceProcess}
-import io.janstenpickle.trace4cats.test.ArbitraryInstances
 import org.scalacheck.{Arbitrary, Gen, Shrink}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+import trace4cats.CompleterConfig
+import trace4cats.avro.server.AvroServer
+import trace4cats.avro.{AvroSpanCompleter, AvroSpanExporter}
+import trace4cats.model.{Batch, CompletedSpan, TraceProcess}
+import trace4cats.test.ArbitraryInstances
 
 import scala.concurrent.duration._
 
