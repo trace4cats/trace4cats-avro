@@ -1,25 +1,20 @@
 package trace4cats.avro
 
-import java.io.ByteArrayOutputStream
 import java.net.ConnectException
 
+import cats.{Applicative, Traverse}
 import cats.effect.kernel.syntax.spawn._
-import cats.effect.kernel.{Async, Resource, Sync}
+import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.{Queue, Semaphore}
+import cats.syntax.applicative._
 import cats.syntax.applicativeError._
-import cats.syntax.apply._
-import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.option._
 import cats.syntax.traverse._
-import cats.{Applicative, Traverse}
 import com.comcast.ip4s.{Host, IpAddress, Port, SocketAddress}
 import fs2.io.net._
 import fs2.{Chunk, Stream}
-import org.apache.avro.Schema
-import org.apache.avro.generic.GenericDatumWriter
-import org.apache.avro.io.EncoderFactory
 import org.typelevel.log4cats.Logger
 import trace4cats.kernel.SpanExporter
 import trace4cats.model.{Batch, CompletedSpan}
@@ -27,53 +22,27 @@ import trace4cats.model.{Batch, CompletedSpan}
 import scala.concurrent.duration._
 
 object AvroSpanExporter {
-  // TODO: use one from cats-core when it's merged https://github.com/typelevel/cats/pull/3705
-  private def replicateA_[F[_]: Applicative, A](fa: F[A])(n: Int): F[Unit] =
-    (1 to n).map(_ => fa).foldLeft(Applicative[F].unit)(_ <* _)
-
-  private def encode[F[_]: Sync](schema: Schema)(span: CompletedSpan): F[Array[Byte]] =
-    Sync[F]
-      .fromEither(AvroInstances.completedSpanCodec.encode(span).leftMap(_.throwable))
-      .flatMap { record =>
-        Resource
-          .make(
-            Sync[F]
-              .delay {
-                val writer = new GenericDatumWriter[Any](schema)
-                val out = new ByteArrayOutputStream
-
-                val encoder = EncoderFactory.get.binaryEncoder(out, null)
-
-                (writer, out, encoder)
-              }
-          ) { case (_, out, _) =>
-            Sync[F].delay(out.close())
-          }
-          .use { case (writer, out, encoder) =>
-            Sync[F].delay {
-              writer.write(record, encoder)
-              encoder.flush()
-              out.toByteArray
-            }
-          }
-      }
 
   /** Creates a UDP exporter with an internal queue that accepts batches from the traced app.
     *
     * @param numFibers
     *   the capacity of the internal queue and the number of concurrent workers that consume the queue and send batches
     *   via UDP; use numbers greater than 1 at your own risk
+    * @param encoder
+    *   an optional instance of [[CompletedSpanEncoder]]. This should be used when multiple Avro exporters are used in a
+    *   single instance so that encoding remains thread safe
     */
   def udp[F[_]: Async, G[_]: Traverse](
     host: String = agentHostname,
     port: Int = agentPort,
-    numFibers: Int = 1
+    numFibers: Int = 1,
+    encoder: Option[CompletedSpanEncoder[F]] = None
   ): Resource[F, SpanExporter[F, G]] = {
     val queueCapacity = numFibers
     val maxPermits = numFibers.toLong
 
     def write(
-      schema: Schema,
+      encode: CompletedSpan => F[Array[Byte]],
       address: SocketAddress[IpAddress],
       semaphore: Semaphore[F],
       queue: Queue[F, Batch[G]],
@@ -86,7 +55,7 @@ object AvroSpanExporter {
             _ <- semaphore.permit.surround {
               batch.spans.traverse { span =>
                 for {
-                  ba <- encode[F](schema)(span)
+                  ba <- encode(span)
                   _ <- socket.write(Datagram(address, Chunk.array(ba)))
                 } yield ()
               }
@@ -97,7 +66,7 @@ object AvroSpanExporter {
         .drain
 
     for {
-      avroSchema <- Resource.eval(AvroInstances.completedSpanSchema[F])
+      enc <- Resource.eval(encoder.fold(CompletedSpanEncoder[F])(Applicative[F].pure(_)))
       host <- Resource.eval(Host.fromString(host).liftTo[F](new IllegalArgumentException(s"invalid host $host")))
       port <- Resource.eval(Port.fromInt(port).liftTo[F](new IllegalArgumentException(s"invalid port $port")))
       address <- Resource.eval(SocketAddress(host, port).resolve[F])
@@ -106,11 +75,11 @@ object AvroSpanExporter {
       socketGroup <- Network[F].datagramSocketGroup()
       socket <- socketGroup.openDatagramSocket()
       writer = Stream
-        .retry(write(avroSchema, address, semaphore, queue, socket), 5.seconds, _ + 1.second, Int.MaxValue)
+        .retry(write(enc.encode, address, semaphore, queue, socket), 5.seconds, _ + 1.second, Int.MaxValue)
         .compile
         .drain
         .background
-      writers = replicateA_(writer)(numFibers)
+      writers = writer.replicateA(numFibers)
       preFinalizer = Resource.unit[F].onFinalize(semaphore.acquireN(maxPermits))
       _ <- writers >> preFinalizer
     } yield new SpanExporter[F, G] {
@@ -123,11 +92,15 @@ object AvroSpanExporter {
     * @param numFibers
     *   the capacity of the internal queue and the number of concurrent workers that consume the queue and send batches
     *   via TCP; use numbers greater than 1 at your own risk
+    * @param encoder
+    *   an optional instance of [[CompletedSpanEncoder]]. This should be used when multiple Avro exporters are used in a
+    *   single instance so that encoding remains thread safe
     */
   def tcp[F[_]: Async: Logger, G[_]: Traverse](
     host: String = agentHostname,
     port: Int = agentPort,
-    numFibers: Int = 1
+    numFibers: Int = 1,
+    encoder: Option[CompletedSpanEncoder[F]] = None
   ): Resource[F, SpanExporter[F, G]] = {
     val queueCapacity = numFibers
     val maxPermits = numFibers.toLong
@@ -143,11 +116,11 @@ object AvroSpanExporter {
         }
 
     def write(
-      schema: Schema,
+      encoder: CompletedSpan => F[Array[Byte]],
       address: SocketAddress[Host],
       semaphore: Semaphore[F],
       queue: Queue[F, Batch[G]],
-      socketGroup: SocketGroup[F]
+      socketGroup: SocketGroup[F],
     ): F[Unit] =
       connect(socketGroup, address)
         .flatMap { socket =>
@@ -158,7 +131,7 @@ object AvroSpanExporter {
                 _ <- semaphore.permit.surround {
                   batch.spans.traverse { span =>
                     for {
-                      ba <- encode[F](schema)(span)
+                      ba <- encoder(span)
                       withTerminator = ba ++ Array(0xc4.byteValue, 0x02.byteValue)
                       _ <- socket.write(Chunk.array(withTerminator))
                     } yield ()
@@ -171,7 +144,7 @@ object AvroSpanExporter {
         .drain
 
     for {
-      avroSchema <- Resource.eval(AvroInstances.completedSpanSchema[F])
+      enc <- Resource.eval(encoder.fold(CompletedSpanEncoder[F])(Applicative[F].pure(_)))
       host <- Resource.eval(Host.fromString(host).liftTo[F](new IllegalArgumentException(s"invalid host $host")))
       port <- Resource.eval(Port.fromInt(port).liftTo[F](new IllegalArgumentException(s"invalid port $port")))
       address = SocketAddress(host, port)
@@ -180,11 +153,11 @@ object AvroSpanExporter {
       socketGroup <- Network[F].socketGroup()
       writer =
         Stream
-          .retry(write(avroSchema, address, semaphore, queue, socketGroup), 5.seconds, _ + 1.second, Int.MaxValue)
+          .retry(write(enc.encode, address, semaphore, queue, socketGroup), 5.seconds, _ + 1.second, Int.MaxValue)
           .compile
           .drain
           .background
-      writers = replicateA_(writer)(numFibers)
+      writers = writer.replicateA(numFibers)
       preFinalizer = Resource.unit[F].onFinalize(semaphore.acquireN(maxPermits))
       _ <- writers >> preFinalizer
     } yield new SpanExporter[F, G] {

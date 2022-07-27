@@ -27,7 +27,7 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
     PropertyCheckConfiguration(minSuccessful = 1, maxDiscardedFactor = 50.0)
 
   implicit val nBatchesArbitrary: Arbitrary[(Int, List[Batch[Chunk]])] = Arbitrary(for {
-    n <- Gen.choose(2, 4)
+    n <- Gen.choose(10, 20)
     list <- Gen.listOfN(n, batchArb.arbitrary)
   } yield (n, list))
 
