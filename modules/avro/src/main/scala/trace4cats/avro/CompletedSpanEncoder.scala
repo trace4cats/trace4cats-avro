@@ -21,7 +21,7 @@ object CompletedSpanEncoder {
       schema <- AvroInstances.completedSpanSchema[F]
       factory <- Sync[F].delay(EncoderFactory.get())
       encoder <- Sync[F].delay(new ThreadLocal[BinaryEncoder])
-      writer <- Sync[F].delay(ThreadLocal.withInitial(() => new GenericDatumWriter[Any](schema)))
+      writer <- Sync[F].delay(new GenericDatumWriter[Any](schema))
     } yield new CompletedSpanEncoder[F] {
       override def encode(span: CompletedSpan): F[Array[Byte]] = Resource
         .fromAutoCloseable(Sync[F].delay(new ByteArrayOutputStream))
@@ -33,8 +33,7 @@ object CompletedSpanEncoder {
                 val encoderInstance = factory.directBinaryEncoder(out, encoder.get())
                 encoder.set(encoderInstance)
 
-                val w = writer.get()
-                w.write(record, encoderInstance)
+                writer.write(record, encoderInstance)
                 out.toByteArray
               }
             }

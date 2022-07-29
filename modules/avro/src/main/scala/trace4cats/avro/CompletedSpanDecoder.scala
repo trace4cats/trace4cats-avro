@@ -18,15 +18,14 @@ object CompletedSpanDecoder {
     schema <- AvroInstances.completedSpanSchema[F]
     factory <- Sync[F].delay(DecoderFactory.get())
     decoder <- Sync[F].delay(new ThreadLocal[BinaryDecoder])
-    reader <- Sync[F].delay(ThreadLocal.withInitial(() => new GenericDatumReader[Any](schema)))
+    reader <- Sync[F].delay(new GenericDatumReader[Any](schema))
   } yield new CompletedSpanDecoder[F] {
     override def decode(bytes: Array[Byte]): F[CompletedSpan] =
       Sync[F]
         .delay {
           val decoderInstance = factory.binaryDecoder(bytes, decoder.get())
 
-          val r = reader.get()
-          r.read(null, decoderInstance)
+          reader.read(null, decoderInstance)
         }
         .flatMap { record =>
           Sync[F].fromEither(AvroInstances.completedSpanCodec.decode(record, schema).leftMap(_.throwable))
