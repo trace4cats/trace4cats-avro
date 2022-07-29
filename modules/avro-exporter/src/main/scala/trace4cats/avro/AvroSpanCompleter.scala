@@ -14,9 +14,10 @@ object AvroSpanCompleter {
     host: String = agentHostname,
     port: Int = agentPort,
     config: CompleterConfig = CompleterConfig(),
+    encoder: Option[CompletedSpanEncoder[F]] = None,
   ): Resource[F, SpanCompleter[F]] =
     Resource.eval(Slf4jLogger.create[F]).flatMap { implicit logger: Logger[F] =>
-      AvroSpanExporter.udp[F, Chunk](host, port).flatMap(QueuedSpanCompleter[F](process, _, config))
+      AvroSpanExporter.udp[F, Chunk](host, port, encoder = encoder).flatMap(QueuedSpanCompleter[F](process, _, config))
     }
 
   def tcp[F[_]: Async](
@@ -24,9 +25,10 @@ object AvroSpanCompleter {
     host: String = agentHostname,
     port: Int = agentPort,
     config: CompleterConfig = CompleterConfig(),
+    encoder: Option[CompletedSpanEncoder[F]] = None,
   ): Resource[F, SpanCompleter[F]] = {
     Resource.eval(Slf4jLogger.create[F]).flatMap { implicit logger: Logger[F] =>
-      AvroSpanExporter.tcp[F, Chunk](host, port).flatMap(QueuedSpanCompleter[F](process, _, config))
+      AvroSpanExporter.tcp[F, Chunk](host, port, encoder = encoder).flatMap(QueuedSpanCompleter[F](process, _, config))
     }
   }
 }
