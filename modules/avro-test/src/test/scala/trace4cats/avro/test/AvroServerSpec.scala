@@ -14,7 +14,7 @@ import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import trace4cats.CompleterConfig
 import trace4cats.avro.server.AvroServer
-import trace4cats.avro.{AvroSpanCompleter, AvroSpanExporter}
+import trace4cats.avro.{AvroSpanCompleter, AvroSpanExporter, CompletedSpanDecoder, CompletedSpanEncoder}
 import trace4cats.model.{Batch, CompletedSpan, TraceProcess}
 import trace4cats.test.ArbitraryInstances
 
@@ -27,7 +27,7 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
     PropertyCheckConfiguration(minSuccessful = 1, maxDiscardedFactor = 50.0)
 
   implicit val nBatchesArbitrary: Arbitrary[(Int, List[Batch[Chunk]])] = Arbitrary(for {
-    n <- Gen.choose(2, 4)
+    n <- Gen.choose(10, 20)
     list <- Gen.listOfN(n, batchArb.arbitrary)
   } yield (n, list))
 
@@ -35,6 +35,9 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
     Arbitrary(Gen.nonEmptyListOf(completedSpanBuilderArb.arbitrary).map(NonEmptyList.fromListUnsafe))
 
   implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
+
+  val decoder = Some(CompletedSpanDecoder[IO].unsafeRunSync())
+  val encoder = Some(CompletedSpanEncoder[IO].unsafeRunSync())
 
   behavior.of("Avro TCP")
 
@@ -44,10 +47,10 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
           (for {
-            server <- AvroServer.tcp[IO](_.evalMap(queue.offer))
+            server <- AvroServer.tcp[IO](_.evalMap(queue.offer), decoder = decoder)
             _ <- server.compile.drain.background
             _ <- Resource.eval(IO.sleep(2.seconds))
-            completer <- AvroSpanExporter.tcp[IO, Chunk]()
+            completer <- AvroSpanExporter.tcp[IO, Chunk](encoder = encoder)
           } yield completer).use(_.exportBatch(batch) >> IO.sleep(3.seconds)) >> Stream
             .fromQueueUnterminated(queue)
             .take(batch.spans.size.toLong)
@@ -68,11 +71,11 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
           (for {
-            server <- AvroServer.tcp[IO](_.evalMap(queue.offer))
+            server <- AvroServer.tcp[IO](_.evalMap(queue.offer), decoder = decoder)
             _ <- server.compile.drain.background
             _ <- Resource.eval(IO.sleep(2.seconds))
-            completer <- AvroSpanExporter.tcp[IO, Chunk](numFibers = n)
-          } yield completer).use(c => batches.traverse_(c.exportBatch) >> IO.sleep(3.seconds)) >> Stream
+            completer <- AvroSpanExporter.tcp[IO, Chunk](numFibers = n, encoder = encoder)
+          } yield completer).use(c => batches.traverse_(c.exportBatch)) >> Stream
             .fromQueueUnterminated(queue)
             .take(batches.foldMap(_.spans.size.toLong))
             .compile
@@ -91,13 +94,14 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
           (for {
-            server <- AvroServer.tcp[IO](_.evalMap(queue.offer), port = 7778)
+            server <- AvroServer.tcp[IO](_.evalMap(queue.offer), port = 7778, decoder = decoder)
             _ <- server.compile.drain.background
             _ <- Resource.eval(IO.sleep(2.seconds))
             completer <- AvroSpanCompleter.tcp[IO](
               process,
               port = 7778,
-              config = CompleterConfig(batchTimeout = 1.second)
+              config = CompleterConfig(batchTimeout = 1.second),
+              encoder = encoder
             )
           } yield completer).use(c => spans.traverse(c.complete) >> IO.sleep(3.seconds)) >> Stream
             .fromQueueUnterminated(queue)
@@ -121,10 +125,10 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
           (for {
-            server <- AvroServer.udp[IO](_.evalMap(queue.offer), port = 7779)
+            server <- AvroServer.udp[IO](_.evalMap(queue.offer), port = 7779, decoder = decoder)
             _ <- server.compile.drain.background
             _ <- Resource.eval(IO.sleep(2.seconds))
-            completer <- AvroSpanExporter.udp[IO, Chunk](port = 7779)
+            completer <- AvroSpanExporter.udp[IO, Chunk](port = 7779, encoder = encoder)
           } yield completer).use(_.exportBatch(batch) >> IO.sleep(3.seconds)) >> Stream
             .fromQueueUnterminated(queue)
             .take(batch.spans.size.toLong)
@@ -145,10 +149,10 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
           (for {
-            server <- AvroServer.udp[IO](_.evalMap(queue.offer), port = 7781)
+            server <- AvroServer.udp[IO](_.evalMap(queue.offer), port = 7781, decoder = decoder)
             _ <- server.compile.drain.background
             _ <- Resource.eval(IO.sleep(2.seconds))
-            completer <- AvroSpanExporter.udp[IO, Chunk](port = 7781, numFibers = n)
+            completer <- AvroSpanExporter.udp[IO, Chunk](port = 7781, numFibers = n, encoder = encoder)
           } yield completer).use(c => batches.traverse_(c.exportBatch) >> IO.sleep(3.seconds)) >> Stream
             .fromQueueUnterminated(queue)
             .take(batches.foldMap(_.spans.size.toLong))
@@ -168,13 +172,14 @@ class AvroServerSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks wit
         .unbounded[IO, CompletedSpan]
         .flatMap { queue =>
           (for {
-            server <- AvroServer.udp[IO](_.evalMap(queue.offer), port = 7780)
+            server <- AvroServer.udp[IO](_.evalMap(queue.offer), port = 7780, decoder = decoder)
             _ <- server.compile.drain.background
             _ <- Resource.eval(IO.sleep(2.seconds))
             completer <- AvroSpanCompleter.udp[IO](
               process,
               port = 7780,
-              config = CompleterConfig(batchTimeout = 1.second)
+              config = CompleterConfig(batchTimeout = 1.second),
+              encoder = encoder
             )
           } yield completer).use(c => spans.traverse(c.complete) >> IO.sleep(3.seconds)) >> Stream
             .fromQueueUnterminated(queue)
