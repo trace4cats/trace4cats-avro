@@ -11,7 +11,7 @@ object Dependencies {
     val fs2 = "3.2.14"
     val log4cats = "2.4.0"
     val logback = "1.2.13"
-    val vulcan = "1.8.3"
+    val vulcan = "1.11.1"
     val slf4j = "1.7.36"
 
     val kindProjector = "0.13.2"

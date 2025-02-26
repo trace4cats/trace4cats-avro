@@ -50,11 +50,7 @@ object AvroInstances {
     }
 
   implicit def evalCodec[A: Codec]: Codec[Eval[A]] =
-    Codec.instance(
-      Codec[A].schema,
-      a => Codec[A].encode(a.value),
-      (obj, schema) => Codec[A].decode(obj, schema).map(Eval.later(_))
-    )
+    Codec[A].imap(Eval.later(_))(_.value)
 
   implicit val traceValueCodec: Codec[AttributeValue] = {
     import AttributeValue._
@@ -237,7 +233,10 @@ object AvroInstances {
 
   implicit val processCodec: Codec[TraceProcess] =
     Codec.record[TraceProcess](name = "TraceProcess", namespace = modelNs) { field =>
-      (field("serviceName", _.serviceName), field("attributes", _.attributes)).mapN(TraceProcess.apply)
+      (
+        field("serviceName", _.serviceName),
+        field("attributes", _.attributes, default = Some(Map.empty[String, AttributeValue]))
+      ).mapN(TraceProcess.apply)
     }
 
   def completedSpanSchema[F[_]: ApplicativeThrow]: F[Schema] =
