@@ -34,11 +34,7 @@ object AvroGenericInstances {
   implicit val spanContextCodec: Codec[SpanContext] = Codec.derive
 
   implicit def evalCodec[A: Codec]: Codec[Eval[A]] =
-    Codec.instance(
-      Codec[A].schema,
-      a => Codec[A].encode(a.value),
-      (obj, schema) => Codec[A].decode(obj, schema).map(Eval.later(_))
-    )
+    Codec[A].imap(Eval.later(_))(_.value)
 
   implicit val traceValueCodec: Codec[AttributeValue] = Codec.derive[AttributeValue]
 
