@@ -2,9 +2,9 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val scala212 = "2.12.16"
-    val scala213 = "2.13.8"
-    val scala3 = "3.3.3"
+    val scala212 = "2.12.20"
+    val scala213 = "2.13.16"
+    val scala3 = "3.3.5"
 
     val trace4cats = "0.14.0"
 
@@ -14,7 +14,7 @@ object Dependencies {
     val vulcan = "1.11.1"
     val slf4j = "1.7.36"
 
-    val kindProjector = "0.13.2"
+    val kindProjector = "0.13.3"
     val betterMonadicFor = "0.3.1"
   }
 
