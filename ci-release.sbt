@@ -19,17 +19,19 @@ ThisBuild / githubWorkflowPublish := Seq(
     name = Some("Publish artifacts"),
     env = Map(
       "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
-      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}",
+      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASS }}",
+      "PGP_SECRET" -> "${{ secrets.GPG_PRIVATE_KEY }}",
     )
   )
 )
 ThisBuild / githubWorkflowPublishCond := Some("github.actor != 'mergify[bot]'")
-ThisBuild / githubWorkflowPublishPreamble += WorkflowStep.Use(
-  ref = UseRef.Public("crazy-max", "ghaction-import-gpg", "v6"),
-  id = Some("import_gpg"),
-  name = Some("Import GPG key"),
-  params = Map("gpg_private_key" -> "${{ secrets.GPG_PRIVATE_KEY }}", "passphrase" -> "${{ secrets.PGP_PASS }}")
-)
+//ThisBuild / githubWorkflowPublishPreamble += WorkflowStep.Use(
+//  ref = UseRef.Public("crazy-max", "ghaction-import-gpg", "v6"),
+//  id = Some("import_gpg"),
+//  name = Some("Import GPG key"),
+//  params = Map("gpg_private_key" -> "${{ secrets.GPG_PRIVATE_KEY }}", "passphrase" -> "${{ secrets.PGP_PASS }}")
+//)
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
 ThisBuild / versionScheme := Some("early-semver")
