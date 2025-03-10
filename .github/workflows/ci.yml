@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.8, 2.12.16, 3.3.3]
+        scala: [2.13.16, 2.12.20, 3.3.5]
         java: [temurin@8, temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -76,7 +76,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.8]
+        scala: [2.13.16]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -104,39 +104,39 @@ jobs:
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
 
-      - name: Download target directories (2.13.8)
+      - name: Download target directories (2.13.16)
         uses: actions/download-artifact@v4
         with:
-          name: target-${{ matrix.os }}-2.13.8-${{ matrix.java }}
+          name: target-${{ matrix.os }}-2.13.16-${{ matrix.java }}
 
-      - name: Inflate target directories (2.13.8)
+      - name: Inflate target directories (2.13.16)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.16)
+      - name: Download target directories (2.12.20)
         uses: actions/download-artifact@v4
         with:
-          name: target-${{ matrix.os }}-2.12.16-${{ matrix.java }}
+          name: target-${{ matrix.os }}-2.12.20-${{ matrix.java }}
 
-      - name: Inflate target directories (2.12.16)
+      - name: Inflate target directories (2.12.20)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3.3.3)
+      - name: Download target directories (3.3.5)
         uses: actions/download-artifact@v4
         with:
-          name: target-${{ matrix.os }}-3.3.3-${{ matrix.java }}
+          name: target-${{ matrix.os }}-3.3.5-${{ matrix.java }}
 
-      - name: Inflate target directories (3.3.3)
+      - name: Inflate target directories (3.3.5)
         run: |
           tar xf targets.tar
           rm targets.tar
 
       - name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v4
+        uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PGP_PASS }}
