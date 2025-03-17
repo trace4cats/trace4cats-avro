@@ -19,4 +19,5 @@ lazy val `trace4cats-avro-server` = module
 
 lazy val `trace4cats-avro-test` = module
   .settings(libraryDependencies ++= Dependencies.`avro-test`)
+  .settings(publish / skip := true)
   .dependsOn(`trace4cats-avro-exporter`, `trace4cats-avro-server`)
