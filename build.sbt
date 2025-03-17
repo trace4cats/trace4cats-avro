@@ -36,35 +36,21 @@ lazy val root = (project in file("."))
 lazy val avro =
   (project in file("modules/avro"))
     .settings(publishSettings)
-    .settings(
-      name := "trace4cats-avro",
-      libraryDependencies ++= Seq(Dependencies.trace4catsKernel, Dependencies.vulcan),
-      libraryDependencies ++=
-        (CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, 13)) => Seq(Dependencies.trace4catsTestkit, Dependencies.vulcanGeneric, Dependencies.slf4jNop)
-          case _ => Seq.empty
-        }).map(_ % Test)
-    )
+    .settings(name := "trace4cats-avro", libraryDependencies ++= Dependencies.`trace4cats-avro`)
 
 lazy val `avro-exporter` =
   (project in file("modules/avro-exporter"))
     .settings(publishSettings)
-    .settings(
-      name := "trace4cats-avro-exporter",
-      libraryDependencies ++= Seq(Dependencies.trace4catsCore, Dependencies.fs2Io)
-    )
+    .settings(name := "trace4cats-avro-exporter", libraryDependencies ++= Dependencies.`avro-exporter`)
     .dependsOn(avro)
 
 lazy val `avro-server` =
   (project in file("modules/avro-server"))
     .settings(publishSettings)
-    .settings(name := "trace4cats-avro-server", libraryDependencies ++= Seq(Dependencies.fs2Io, Dependencies.log4cats))
+    .settings(name := "trace4cats-avro-server", libraryDependencies ++= Dependencies.`avro-server`)
     .dependsOn(avro)
 
 lazy val `avro-test` = (project in file("modules/avro-test"))
   .settings(noPublishSettings)
-  .settings(
-    name := "trace4cats-avro-test",
-    libraryDependencies ++= Seq(Dependencies.trace4catsTestkit, Dependencies.logback).map(_ % Test)
-  )
+  .settings(name := "trace4cats-avro-test", libraryDependencies ++= Dependencies.`avro-test`)
   .dependsOn(`avro-exporter`, `avro-server`)

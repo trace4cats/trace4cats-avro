@@ -1,34 +1,21 @@
 import sbt._
 
 object Dependencies {
-  object Versions {
-    val scala212 = "2.12.20"
-    val scala213 = "2.13.16"
-    val scala3 = "3.3.5"
 
-    val trace4cats = "0.14.0"
+  lazy val kindProjector = ("org.typelevel" % "kind-projector"     % "0.13.3").cross(CrossVersion.full)
+  lazy val betterMonadicFor = "com.olegpy" %% "better-monadic-for" % "0.3.1"
 
-    val fs2 = "3.2.14"
-    val log4cats = "2.4.0"
-    val logback = "1.2.13"
-    val vulcan = "1.11.1"
-    val slf4j = "1.7.36"
+  lazy val `trace4cats-avro` =
+    Seq("io.janstenpickle" %% "trace4cats-kernel" % "0.14.0", "com.github.fd4s" %% "vulcan" % "1.11.1") ++ Seq(
+      "io.janstenpickle" %% "trace4cats-testkit" % "0.14.0",
+      "com.github.fd4s"  %% "vulcan-generic"     % "1.11.1",
+      "org.slf4j"         % "slf4j-nop"          % "1.7.36"
+    ).map(_ % Test)
 
-    val kindProjector = "0.13.3"
-    val betterMonadicFor = "0.3.1"
-  }
+  lazy val `avro-test`: Seq[ModuleID] =
+    Seq("io.janstenpickle" %% "trace4cats-testkit" % "0.14.0", "ch.qos.logback" % "logback-classic" % "1.2.13")
 
-  lazy val trace4catsKernel = "io.janstenpickle"  %% "trace4cats-kernel"  % Versions.trace4cats
-  lazy val trace4catsCore = "io.janstenpickle"    %% "trace4cats-core"    % Versions.trace4cats
-  lazy val trace4catsTestkit = "io.janstenpickle" %% "trace4cats-testkit" % Versions.trace4cats
+  lazy val `avro-exporter` = Seq("io.janstenpickle" %% "trace4cats-core" % "0.14.0", "co.fs2" %% "fs2-io" % "3.2.14")
+  lazy val `avro-server` = Seq("org.typelevel" %% "log4cats-slf4j" % "2.4.0", "co.fs2" %% "fs2-io" % "3.2.14")
 
-  lazy val fs2Io = "co.fs2"                  %% "fs2-io"          % Versions.fs2
-  lazy val log4cats = "org.typelevel"        %% "log4cats-slf4j"  % Versions.log4cats
-  lazy val logback = "ch.qos.logback"         % "logback-classic" % Versions.logback
-  lazy val vulcan = "com.github.fd4s"        %% "vulcan"          % Versions.vulcan
-  lazy val vulcanGeneric = "com.github.fd4s" %% "vulcan-generic"  % Versions.vulcan
-  lazy val slf4jNop = "org.slf4j"             % "slf4j-nop"       % Versions.slf4j
-
-  lazy val kindProjector = ("org.typelevel" % "kind-projector"     % Versions.kindProjector).cross(CrossVersion.full)
-  lazy val betterMonadicFor = "com.olegpy" %% "better-monadic-for" % Versions.betterMonadicFor
 }
