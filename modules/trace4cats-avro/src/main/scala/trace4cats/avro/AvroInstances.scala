@@ -1,15 +1,18 @@
 package trace4cats.avro
 
+import cats.ApplicativeThrow
+import cats.Eval
 import cats.data.NonEmptyList
 import cats.free.FreeApplicative
-import cats.syntax.apply._
-import cats.syntax.either._
-import cats.{ApplicativeThrow, Eval}
+import cats.syntax.all._
+
 import org.apache.avro.Schema
 import trace4cats.model._
-import vulcan.{AvroError, Codec}
+import vulcan.AvroError
+import vulcan.Codec
 
 object AvroInstances {
+
   private val modelNs = "trace4cats.model"
 
   implicit val spanIdCodec: Codec[SpanId] =
@@ -26,7 +29,7 @@ object AvroInstances {
 
   implicit val traceStateCodec: Codec[TraceState] = Codec
     .map[TraceState.Value]
-    .imap(_.flatMap { case (k, v) => TraceState.Key(k).map(_ -> v) })(_.map { case (k, v) => k.k -> v })
+    .imap(_.flatMap { case (k, v) => TraceState.Key(k).map(_ -> v).toList.toMap })(_.map { case (k, v) => k.k -> v })
     .imapError[TraceState](TraceState(_).toRight(AvroError("Invalid trace state size")))(_.values)
 
   implicit val traceFlagsCodec: Codec[TraceFlags] =
@@ -56,9 +59,9 @@ object AvroInstances {
     import AttributeValue._
     val ns = s"$modelNs.AttributeValue"
 
-    implicit val boolValueCodec: Codec[BooleanValue] = Codec.boolean.imap(BooleanValue(_))(_.value.value)
+    implicit val boolValueCodec: Codec[BooleanValue]  = Codec.boolean.imap(BooleanValue(_))(_.value.value)
     implicit val doubleValueCodec: Codec[DoubleValue] = Codec.double.imap(DoubleValue(_))(_.value.value)
-    implicit val longValueCodec: Codec[LongValue] = Codec.long.imap(LongValue(_))(_.value.value)
+    implicit val longValueCodec: Codec[LongValue]     = Codec.long.imap(LongValue(_))(_.value.value)
     implicit val stringValueCodec: Codec[StringValue] = Codec.string.imap(StringValue(_))(_.value.value)
 
     implicit val boolListCodec: Codec[BooleanList] =
@@ -227,7 +230,7 @@ object AvroInstances {
         field("attributes", _.attributes),
         field("status", _.status),
         field("links", _.links),
-        field("metaTrace", _.metaTrace),
+        field("metaTrace", _.metaTrace)
       ).mapN(CompletedSpan.apply)
     }
 
@@ -241,4 +244,5 @@ object AvroInstances {
 
   def completedSpanSchema[F[_]: ApplicativeThrow]: F[Schema] =
     ApplicativeThrow[F].fromEither(completedSpanCodec.schema.leftMap(_.throwable))
+
 }
