@@ -22,7 +22,7 @@ object Dependencies {
   )
 
   lazy val `avro-server` = Seq(
-    "org.typelevel" %% "log4cats-slf4j" % "2.4.0",
+    "org.typelevel" %% "log4cats-slf4j" % "2.8.0",
     "co.fs2"        %% "fs2-io"         % "3.2.14"
   )
 
