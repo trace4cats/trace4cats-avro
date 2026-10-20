@@ -4,10 +4,10 @@ object Dependencies {
 
   lazy val `trace4cats-avro` = Seq(
     "io.janstenpickle" %% "trace4cats-kernel" % "0.14.0",
-    "com.github.fd4s"  %% "vulcan"            % "1.11.1"
+    "com.github.fd4s"  %% "vulcan"            % "1.14.1"
   ) ++ Seq(
     "io.janstenpickle" %% "trace4cats-testkit" % "0.14.0",
-    "com.github.fd4s"  %% "vulcan-generic"     % "1.11.1",
+    "com.github.fd4s"  %% "vulcan-generic"     % "1.14.1",
     "org.slf4j"         % "slf4j-nop"          % "1.7.36"
   ).map(_ % Test)
 
