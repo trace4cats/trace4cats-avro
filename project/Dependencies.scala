@@ -13,7 +13,7 @@ object Dependencies {
 
   lazy val `avro-test`: Seq[ModuleID] = Seq(
     "io.janstenpickle" %% "trace4cats-testkit" % "0.14.0",
-    "ch.qos.logback"    % "logback-classic"    % "1.2.13"
+    "ch.qos.logback"    % "logback-classic"    % "1.6.6"
   )
 
   lazy val `avro-exporter` = Seq(
